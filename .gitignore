@@ -11,6 +11,9 @@
 !/src/**
 !/README.md
 
+pkg/
+api.key
+*-handin.tar.gz
 
 
  

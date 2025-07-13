@@ -20,21 +20,31 @@ import "encoding/base64"
 import "time"
 import "fmt"
 
+// 生成一个长度为n的随机字符串
 func randstring(n int) string {
+	// 创建一个长度为2n的字节切片
 	b := make([]byte, 2*n)
+	// 使用crypto/rand包中的Read函数，将随机字节写入字节切片b
 	crand.Read(b)
+	// 使用base64.URLEncoding.EncodeToString函数，将字节切片b转换为字符串,base64会把3字节编码成4个字节
+	// 所有最后会用1.5n的长度，保证n个字符安全
 	s := base64.URLEncoding.EncodeToString(b)
+	// 返回字符串s的前n个字符
 	return s[0:n]
 }
 
+// 生成一个随机种子
 func makeSeed() int64 {
+	// 定义一个最大值，为2的62次方
 	max := big.NewInt(int64(1) << 62)
+	// 生成一个随机数，范围为0到max之间，crand.Reader是一个安全的随机数生成器
 	bigx, _ := crand.Int(crand.Reader, max)
+	// 将随机数转换为int64类型
 	x := bigx.Int64()
 	return x
 }
 
-type config struct {
+type config struct { 
 	mu        sync.Mutex
 	t         *testing.T
 	net       *labrpc.Network
@@ -55,14 +65,15 @@ type config struct {
 	maxIndex0 int
 }
 
-var ncpu_once sync.Once
+var ncpu_once sync.Once //  定义一个sync.Once类型的变量，用于保证某个操作只执行一次
 
+// 初始化config结构体
 func make_config(t *testing.T, n int, unreliable bool) *config {
 	ncpu_once.Do(func() {
-		if runtime.NumCPU() < 2 {
+		if runtime.NumCPU() < 2 { //  如果NumCPU() < 2，则打印警告信息
 			fmt.Printf("warning: only one CPU, which may conceal locking bugs\n")
 		}
-		rand.Seed(makeSeed())
+		rand.Seed(makeSeed()) //  使用makeSeed()函数生成随机数种子
 	})
 	runtime.GOMAXPROCS(4)
 	cfg := &config{}
